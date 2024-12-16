@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siri 2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --siri-bg: #000000;
+            --siri-primary: #2D2D2D;
+            --siri-accent: #2979FF;
+            --siri-text: #FFFFFF;
+            --siri-gradient: linear-gradient(135deg, #0A84FF, #0066CC);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: radial-gradient(circle at center, #1A1A1A 0%, #000000 100%);
+            color: var(--siri-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .siri-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            background: radial-gradient(circle at center, 
+                rgba(41, 121, 255, 0.1) 0%,
+                rgba(41, 121, 255, 0.05) 30%,
+                rgba(0, 0, 0, 0) 70%);
+        }
+
+        .siri-orb {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            position: relative;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .siri-core {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle at center,
+                rgba(41, 121, 255, 1) 0%,
+                rgba(41, 121, 255, 0.8) 50%,
+                rgba(41, 121, 255, 0.4) 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 60px rgba(41, 121, 255, 0.6);
+            animation: pulse 2s infinite ease-in-out;
+            position: relative;
+            z-index: 2;
+        }
+
+        .siri-core::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center,
+                rgba(41, 121, 255, 0.4) 0%,
+                rgba(41, 121, 255, 0) 70%);
+            filter: blur(10px);
+            z-index: 1;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); filter: brightness(0.9); }
+            50% { transform: scale(1.05); filter: brightness(1.2); }
+            100% { transform: scale(0.95); filter: brightness(0.9); }
+        }
+
+        .waveform {
+            position: absolute;
+            width: 300px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            z-index: 1;
+        }
+
+        .wave-bar {
+            width: 3px;
+            height: 3px;
+            background: var(--siri-gradient);
+            border-radius: 1px;
+            transition: height 0.2s ease;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background: rgba(45, 45, 45, 0.2);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease;
+            font-size: 16px;
+            line-height: 1.4;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .bot {
+            background: var(--siri-gradient);
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+            transform-origin: left bottom;
+        }
+
+        .user {
+            background: rgba(255, 255, 255, 0.1);
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+            transform-origin: right bottom;
+        }
+
+        .input-area {
+            background: rgba(45, 45, 45, 0.3);
+            border-radius: 20px;
+            margin: 10px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--siri-text);
+            padding: 12px;
+            font-size: 16px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .fact-button {
+            background: var(--siri-gradient);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin: 0 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 10px rgba(41, 121, 255, 0.2);
+        }
+
+        .fact-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(41, 121, 255, 0.4);
+        }
+
+        .send-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--siri-gradient);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(41, 121, 255, 0.2);
+        }
+
+        .send-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(41, 121, 255, 0.4);
+        }
+
+        .send-button svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(10px) scale(0.95); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+
+        /* Custom Scrollbar */
+        .chat-box::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-box::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .chat-box::-webkit-scrollbar-thumb {
+            background: var(--siri-gradient);
+            border-radius: 3px;
+        }
+
+        .chat-box::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #0A84FF 0%, #0066CC 100%);
+        }
+
+        @media (max-width: 768px) {
+            .siri-orb {
+                width: 150px;
+                height: 150px;
+            }
+
+            .siri-core {
+                width: 75px;
+                height: 75px;
+            }
+
+            .waveform {
+                width: 200px;
+            }
+
+            .message {
+                max-width: 90%;
+                font-size: 14px;
+            }
+
+            .fact-button {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+
+        /* Loading Animation */
+        .typing {
+            display: flex;
+            align-items: center;
+            margin-left: 15px;
+            margin-bottom: 15px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            margin: 0 2px;
+            background: var(--siri-accent);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: loadingFade 1s infinite;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes loadingFade {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="siri-container">
+        <div class="siri-orb">
+            <div class="siri-core"></div>
+            <div class="waveform" id="waveform"></div>
+        </div>
+        <div class="chat-container">
+            <div class="chat-box" id="chatBox"></div>
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="Hi, I'm Siri! Ask me for a fact about Apple..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                <button class="fact-button" id="factButton" onclick="getFactButton()">Get Fact</button>
+                <button class="send-button" onclick="sendMessage()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const appleFacts = [
+            "Steve Jobs was adopted shortly after birth in 1955.",
+            "Steve Jobs dropped out of Reed College after just one semester.",
+            "Steve Jobs traveled to India in 1974 to seek spiritual enlightenment.",
+            "Steve Jobs was a practicing Buddhist and followed a strict vegan diet.",
+            "Steve Jobs started Apple in his parents' garage with Steve Wozniak.",
+            "Steve Jobs was fired from Apple in 1985 but returned in 1997.",
+            "Steve Jobs also founded Pixar Animation Studios, which was later sold to Disney.",
+            "Steve Jobs was known for his iconic black turtleneck and jeans outfit.",
+            "Steve Jobs gave the famous 'Stay Hungry, Stay Foolish' speech at Stanford in 2005.",
+            "Steve Jobs had a $1 annual salary as Apple's CEO.",
+            "Steve Jobs was inducted into the California Hall of Fame in 2007.",
+            "Steve Jobs held over 300 patents during his lifetime.",
+            "Steve Jobs revolutionized six industries: personal computers, phones, music, tablets, animated movies, and digital publishing.",
+            "Steve Jobs met his biological sister, novelist Mona Simpson, as an adult.",
+            "Steve Jobs worked at Atari before founding Apple.",
+            "Steve Jobs named Apple after visiting an apple farm while on a fruitarian diet.",
+            "Steve Jobs initially wanted to become a Buddhist monk before starting Apple.",
+            "Steve Jobs drove cars without license plates using a legal loophole.",
+            "Steve Jobs was a college dropout but still gave the commencement speech at Stanford.",
+            "Steve Jobs' last words were reportedly 'Oh wow. Oh wow. Oh wow.'",
+            "Steve Jobs had four children: Lisa, Reed, Erin, and Eve.",
+            "Steve Jobs invested $5 million in Pixar when he bought it from Lucasfilm.",
+            "Steve Jobs' biological father was Syrian, making him of Syrian descent.",
+            "Steve Jobs met Steve Wozniak through a mutual friend in 1971.",
+            "Steve Jobs was awarded the Presidential Medal of Freedom posthumously in 2022.",
+            "Apple was founded on April 1, 1976, by Steve Jobs, Steve Wozniak, and Ronald Wayne.",
+            "The first Apple logo featured Sir Isaac Newton sitting under an apple tree.",
+            "Apple's first product, the Apple I computer, was hand-built by Steve Wozniak.",
+            "The Apple II was the first personal computer with color graphics.",
+            "The Macintosh was introduced in 1984 with the famous '1984' Super Bowl commercial.",
+            "Steve Jobs was forced out of Apple in 1985 but returned in 1997.",
+            "The iPod was introduced in 2001 with the slogan '1,000 songs in your pocket.'",
+            "The iPhone was unveiled by Steve Jobs in 2007.",
+            "Apple became the first U.S. company to reach a $1 trillion market cap in 2018.",
+            "The App Store was launched in 2008 with just 500 apps.",
+            
+            "The original Apple Computer logo was designed by Ronald Wayne.",
+            "The Apple II computer was introduced in 1977 and remained in production until 1993.",
+            "The Macintosh was named after the McIntosh apple variety.",
+            "The first iPhone didn't have copy and paste functionality.",
+            "Apple's headquarters, Apple Park, is powered by 100% renewable energy.",
+            "The first Apple Store opened in 2001 in Tysons Corner, Virginia.",
+            "The iPod's scroll wheel was inspired by old telephone dials.",
+            "Safari browser was released in 2003.",
+            "The Mac OS X operating system was based on NeXT's operating system.",
+            "Steve Jobs bought Pixar from Lucasfilm in 1986.",
+            "The original iPhone development codename was 'Project Purple.'",
+            "Apple's first laptop was the Macintosh Portable, released in 1989.",
+            "The original AirPods took 3 years to develop.",
+            "Apple's first wireless product was the AirPort.",
+            "The first Apple TV was code-named 'iTV.'",
+            "Apple's first touch interface was on the Newton.",
+            "The original iPad had 256MB of RAM.",
+            "Apple's first processor was the A4 chip.",
+            "The first Apple Store app launched in 2010.",
+            "Apple's first cloud service was iTools.",
+            "The original HomePod took 6 years to develop.",
+            "Apple's first music player was the iPod.",
+            "The first Apple Watch had 8GB of storage.",
+            "Apple's first wireless charging was AirPower.",
+            "The original AirPods Pro took 3 years to develop.",
+            "Apple's first gaming console was Pippin.",
+            "The first Apple silicon Mac was the MacBook Air.",
+            "Apple's first foldable device is in development.",
+            "The original Apple TV had a 40GB hard drive.",
+            "Apple's first streaming service was iTunes Radio.",
+            "The first Apple credit card launched in 2019.",
+            "Apple's first fitness service was Fitness+.",
+            "The original HomePod had 7 tweeters.",
+            "Apple's first news service was News+.",
+            "The first Apple arcade launched in 2019.",
+            "Apple's first TV service was TV+.",
+            "The original AirTag took 2 years to develop.",
+            "Apple's first car project started in 2014.",
+            "The first Apple Maps launched in 2012.",
+            "Apple's first voice assistant was Siri.",
+            "The original Apple Watch had 18 hours battery life.",
+            "Apple's first wireless charger was MagSafe.",
+            "The first Apple silicon chip was the M1.",
+            "Apple's first VR headset is Vision Pro.",
+            "The original AirPods had 5 hours battery life.",
+            "Apple's first smart speaker was HomePod.",
+            "The first Apple Watch Ultra launched in 2022.",
+            "Apple's first satellite service was Emergency SOS.",
+            "The original iPhone SE launched in 2016.",
+            "Apple's first car key feature launched in 2020.",
+            "The first Apple One bundle launched in 2020.",
+            "Apple's first privacy report launched in 2021.",
+            "The original Apple Card had no numbers.",
+            "Apple's first tracking prevention was in Safari.",
+            "The first Apple trade-in program started in 2013.",
+            "Apple's first recycling robot was Liam.",
+            "The original Apple Pay launched in 2014.",
+            "Apple's first health feature was HealthKit.",
+            "The first Apple Watch ECG launched in 2018.",
+            "Apple's first blood oxygen sensor was in 2020.",
+            "The original Apple Watch fall detection launched in 2018.",
+            "Apple's first Noise app launched in 2019.",
+            "The first Apple Cycle tracking launched in 2019.",
+            "Apple's first Blood Oxygen app launched in 2020.",
+            "The original Apple ECG app launched in 2018.",
+            "Apple's first Heart Rate notifications launched in 2017.",
+            "The first Apple Irregular rhythm notification launched in 2018.",
+            "Apple's first Walking Steadiness launched in 2021.",
+            "The original Apple Health app launched in 2014.",
+            "Apple's first Health Records feature launched in 2018.",
+            "The first Apple Health sharing launched in 2021.",
+            "Apple's first COVID-19 Exposure Notifications launched in 2020.",
+            "The first Apple SharePlay launched in 2021.",
+            "Apple's first mixed reality headset, the Vision Pro, was announced in 2023.",
+            "The Apple Watch Ultra was introduced in 2022 as Apple's most rugged watch.",
+            "Apple's M3 chip was announced in October 2023.",
+            "The iPhone 15 Pro was the first iPhone with a titanium frame.",
+            "Apple's first USB-C iPhone was the iPhone 15 series in 2023.",
+            "The Apple Watch Series 9 introduced the Double Tap gesture in 2023.",
+            "Apple's headquarters, Apple Park, cost approximately $5 billion to build.",
+            "The Apple Vision Pro features an external display called EyeSight.",
+            "Apple's first 3nm chips were introduced with the A17 Pro.",
+            "The original Apple Watch was announced in September 2014.",
+            "Apple's Swift programming language was introduced in 2014.",
+            "The Apple Pencil was first introduced alongside the iPad Pro in 2015.",
+            "Apple acquired Beats Electronics for $3 billion in 2014.",
+            "The Apple TV 4K supports Dolby Atmos and Dolby Vision.",
+            "Apple's first ARM-based Mac chip was the M1 in 2020.",
+            "The MacBook Air was famously introduced by pulling it out of a manila envelope.",
+            "Apple's first wireless charging case was for AirPods in 2019.",
+            "The Apple Watch can detect falls and call emergency services.",
+            "Apple Maps was launched in 2012 to replace Google Maps.",
+            "The first Apple Store opened in 2001 in Tysons Corner, Virginia.",
+            "Apple's first gaming subscription service, Apple Arcade, launched in 2019.",
+            "The iPhone 14 series introduced Emergency SOS via satellite.",
+            "Apple's first credit card, the Apple Card, launched in 2019.",
+            "The MacBook Pro's Touch Bar was introduced in 2016.",
+            "Apple's first fitness subscription service launched in 2020.",
+            "The AirPods Max were Apple's first over-ear headphones.",
+            "Apple's TestFlight service was acquired in 2014.",
+            "The first Apple Silicon Mac was the MacBook Air in 2020.",
+            "Apple's first 48MP camera was in the iPhone 14 Pro.",
+            "The Dynamic Island was introduced with iPhone 14 Pro.",
+            "Apple's first Always-On display was on the iPhone 14 Pro.",
+            "The Apple Watch Ultra has up to 60 hours of battery life.",
+            "Apple's ProRes video format was introduced in 2021.",
+            "The first MacBook Pro with ProMotion display was in 2021.",
+            "Apple's first Thunderbolt display was released in 2011.",
+            "The HomePod mini was introduced in 2020.",
+            "Apple's first spatial audio feature launched in 2020.",
+            "The Magic Keyboard for iPad was introduced in 2020.",
+            "Apple's first 5G iPhone was the iPhone 12 series.",
+            "The Apple Watch Series 4 introduced ECG capability.",
+            "Apple's first neural engine was in the A11 Bionic chip.",
+            "The iPhone X introduced Face ID in 2017.",
+            "Apple's first OLED iPhone was the iPhone X.",
+            "The AirTag was introduced in April 2021.",
+            "Apple's first MagSafe iPhone was the iPhone 12.",
+            "The Studio Display was introduced in 2022.",
+            "Apple's first desktop silicon was the M1 Ultra.",
+            "The MacBook Pro notch was introduced in 2021.",
+            "Apple's ProRAW photo format launched in 2020.",
+            "The Apple Vision Pro features an external display called EyeSight.",
+            "The iPhone 15 Pro Max can record spatial videos for Vision Pro.",
+            "Apple's first double tap gesture was introduced in watchOS 10.",
+            "The iPhone 15 Pro can record ProRes video directly to external drives.",
+            "Apple's carbon neutral goal is set for 2030.",
+            "The Vision Pro features dual micro-OLED technology.",
+            "Apple's first car project was codenamed 'Project Titan'.",
+            "The iPhone 15 Pro's action button has 9 different functions.",
+            "Apple's Find My network consists of over a billion devices.",
+            "The Vision Pro has a battery life of up to 2 hours.",
+            "Apple's first foldable device is rumored for 2025.",
+            "The iPhone 15 Pro's frame is made of grade 5 titanium.",
+            "Apple's largest store is in Dubai, UAE.",
+            "The Vision Pro features a digital crown like the Apple Watch.",
+            "Apple's most expensive product is the Vision Pro at $3,499.",
+            "The iPhone 15 series supports Qi2 wireless charging.",
+            "Apple's first VR headset development started in 2015.",
+            "The iPhone 15 Pro can shoot 4K ProRes at 60fps.",
+            "Apple's headquarters runs on 100% renewable energy.",
+            "The Vision Pro has 12 cameras, 5 sensors, and 6 microphones.",
+            "Apple's App Store has over 2 million apps.",
+            "The iPhone 15 Pro Max has a 5x optical zoom.",
+            "Apple's first satellite connectivity launched with iPhone 14.",
+            "The Vision Pro runs on visionOS 1.0.",
+            "Apple's largest acquisition was Beats for $3 billion.",
+            "The iPhone 15 series has a USB-C port with USB 3 speeds.",
+            "Apple's first mixed reality OS is called visionOS.",
+            "The Vision Pro has an R1 chip dedicated to processing input.",
+            "Apple's services revenue hit record highs in 2023.",
+            "The iPhone 15 Pro can record spatial video.",
+            "Apple's most powerful chip is the M2 Ultra.",
+            "The Vision Pro uses iris scanning for authentication.",
+            "Apple's first OLED iPad is planned for 2024.",
+            "The iPhone 15 Pro supports Wi-Fi 6E.",
+            "Apple's first periscope camera is in iPhone 15 Pro Max.",
+            "The Vision Pro has a micro-LED display.",
+            "Apple's first AI model is rumored for 2024.",
+            "The iPhone 15 series supports roadside assistance via satellite.",
+            "Apple's first quantum dot display is rumored for iPads.",
+            "The Vision Pro has hand and eye tracking.",
+            "Apple's first microLED device is planned for 2024.",
+            "The iPhone 15 Pro supports 10Gbps data transfer.",
+            "Apple's first AI features are in iOS 17.",
+            "The Vision Pro has a wayfinder feature for AirPods.",
+            "Apple's first 8K display is rumored for 2024.",
+            "The iPhone 15 Pro has a customizable action button.",
+            "Apple's first spatial computing device is Vision Pro.",
+            "The Vision Pro supports prescription lenses.",
+            "Apple's first AI assistant was Siri in 2011.",
+            "The iPhone 15 Pro has a 3nm A17 Pro chip.",
+            "Apple's first spatial audio launched in 2020.",
+            "The Vision Pro has a shared viewing experience feature.",
+            "Apple's first terahertz sensor is rumored for 2025.",
+            "The iPhone 15 Pro supports ray tracing in games.",
+            "Apple's first AR glasses are rumored for 2025.",
+            "The Vision Pro has a pass-through video mode.",
+            "Apple's first liquid cooling is rumored for iPhone 16.",
+            "The iPhone 15 Pro supports USB 3.2 Gen 2.",
+            "Apple's first under-display camera is rumored for 2024.",
+            "The Vision Pro has a dual-chip design with M2 and R1.",
+            "Apple's first variable refresh rate was ProMotion.",
+            // Adding Apple Inc. corporate facts
+            "Apple Inc. became the first company to reach a $3 trillion market cap in 2022.",
+            "Apple employs over 160,000 people worldwide as of 2023.",
+            "Apple's headquarters, Apple Park, is one of the world's largest solar-powered buildings.",
+            "Apple has retail stores in more than 25 countries worldwide.",
+            "Apple was officially incorporated on January 3, 1977.",
+            "Apple's first company logo featured Isaac Newton sitting under an apple tree.",
+            "The rainbow Apple logo was used from 1977 to 1998.",
+            "Apple's current CEO, Tim Cook, took over from Steve Jobs in 2011.",
+            "Apple's first product was sold for $666.66 (the Apple I computer).",
+            "Apple became a Fortune 500 company in 1983.",
+            "Apple's first international office opened in Ireland in 1980.",
+            "Apple's revenue in 2023 was over $383 billion.",
+            "Apple has acquired over 100 companies throughout its history.",
+            "The company's official name changed from Apple Computer, Inc. to Apple Inc. in 2007.",
+            "Apple's first slogan was 'Byte into an Apple'.",
+            "Apple has won over 38 Academy Awards for its content and technical achievements.",
+            "Apple's App Store was launched in 2008 with just 500 apps.",
+            "Apple has over 2 billion active devices worldwide as of 2023.",
+            "Apple's research and development budget exceeds $22 billion annually.",
+            "Apple Park spans 2.8 million square feet and houses up to 12,000 employees.",
+            "Apple has been carbon neutral for corporate operations since 2020.",
+            "Apple's first investor, Mike Markkula, invested $250,000 in the company.",
+            "Apple has over 85,000 registered patents worldwide.",
+            "Apple's first computer was hand-built and sold for $666.66.",
+            "Apple's board of directors includes Tim Cook and Al Gore.",
+            "Apple's largest market outside the US is China.",
+            "Apple has educational programs in over 100 countries.",
+            "Apple's stock has split five times since going public.",
+            "Apple went public on December 12, 1980.",
+            "Apple's IPO created about 300 millionaires instantly.",
+            "Apple's first overseas factory opened in Ireland in 1980.",
+            "Apple's Design Awards have been given out since 1997.",
+            "Apple University was established in 2008 to train executives.",
+            "Apple's first acquisition was Network Innovations in 1988.",
+            "Apple's largest acquisition was Beats Electronics for $3 billion.",
+            "Apple's first corporate headquarters was in Cupertino, California.",
+            "Apple has over 500 retail stores worldwide.",
+            "Apple's environmental goal is to be carbon neutral by 2030.",
+            "Apple uses 100% renewable energy in all its facilities.",
+            "Apple has recycled over 100 million devices through its recycling program.",
+            "Apple's supplier code covers over 3 million workers worldwide.",
+            "Apple's first corporate bond was issued in 1994.",
+            "Apple has won over 1,000 design patents.",
+            "Apple's first dividend was paid in 1987.",
+            "Apple suspended dividends from 1995 to 2012.",
+            "Apple's board has nine members as of 2023.",
+            "Apple's first corporate acquisition cost $100,000.",
+            "Apple's original business plan was 3 pages long.",
+            "Apple's first marketing budget was $91,000.",
+            "Apple's first office space cost $200 per month.",
+            "Apple's first bank loan was for $250,000.",
+            "Apple's first company car was a Volkswagen bus.",
+            "Apple's first international sale was to Australia.",
+            "Apple's first company retreat was in Pajaro Dunes.",
+            "Apple's first corporate jet was purchased in 1986.",
+            "Apple's first million-dollar quarter was in 1979.",
+            "Apple's first billion-dollar year was in 1982.",
+            "Apple's first stock option plan was created in 1977.",
+            "Apple's first corporate philanthropy program started in 1979.",
+            "Apple's first employee stock purchase plan began in 1981.",
+            "Apple's first pension plan was established in 1983."
+        ];
+
+        // Speech synthesis setup
+        const synth = window.speechSynthesis;
+        let voices = [];
+        let userName = '';
+        let userAge = '';
+        let isInitialSetup = true;
+
+        function loadVoices() {
+            voices = synth.getVoices();
+            if (voices.length > 0) {
+                // Prefer Samantha voice for Siri-like experience
+                const preferredVoice = voices.find(voice => 
+                    voice.name.includes('Samantha') || 
+                    voice.name.includes('Female') ||
+                    voice.name.includes('Google US English Female')
+                );
+                if (preferredVoice) {
+                    defaultVoice = preferredVoice;
+                }
+            }
+        }
+
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        function speak(text) {
+            // Cancel any ongoing speech
+            synth.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Try to find Samantha voice or a female voice
+            const preferredVoice = voices.find(voice => 
+                voice.name.includes('Samantha') || 
+                voice.name.includes('Female') ||
+                voice.name.includes('Google US English Female')
+            );
+            
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+            
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            // Start waveform animation
+            startWaveform();
+            
+            // Stop waveform when speech ends
+            utterance.onend = function() {
+                stopWaveform();
+            };
+            
+            synth.speak(utterance);
+        }
+
+        // Create waveform bars
+        const waveform = document.getElementById('waveform');
+        for (let i = 0; i < 20; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'wave-bar';
+            waveform.appendChild(bar);
+        }
+
+        let isAnimating = false;
+
+        function animateWaveform() {
+            if (!isAnimating) return;
+            
+            const bars = document.querySelectorAll('.wave-bar');
+            bars.forEach(bar => {
+                const height = Math.random() * 30 + 5;
+                bar.style.height = height + 'px';
+                bar.style.transition = 'height 0.2s ease';
+            });
+
+            setTimeout(animateWaveform, 200);
+        }
+
+        function startWaveform() {
+            isAnimating = true;
+            animateWaveform();
+        }
+
+        function stopWaveform() {
+            isAnimating = false;
+            const bars = document.querySelectorAll('.wave-bar');
+            bars.forEach(bar => {
+                bar.style.height = '3px';
+            });
+        }
+
+        function clearChatHistory() {
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML = '';
+        }
+
+        function appendMessage(text, sender) {
+            // Clear previous messages
+            clearChatHistory();
+            
+            const chatBox = document.getElementById('chatBox');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = text;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            // Only speak messages from the bot
+            if (sender === 'bot') {
+                speak(text);
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                // Clear previous messages
+                clearChatHistory();
+                
+                appendMessage(message, 'user');
+                input.value = '';
+                
+                // Add a small delay before bot response to make it more natural
+                setTimeout(() => {
+                    getResponse(message);
+                }, 1000);
+            }
+        }
+
+        function getFact() {
+            const fact = appleFacts[Math.floor(Math.random() * appleFacts.length)];
+            // Clear previous messages
+            clearChatHistory();
+            appendMessage(fact, 'bot');
+        }
+
+        function getFactButton() {
+            if (!isInitialSetup) {
+                const fact = appleFacts[Math.floor(Math.random() * appleFacts.length)];
+                // Clear previous messages
+                clearChatHistory();
+                appendMessage(fact, 'bot');
+            }
+        }
+
+        // Add click event listener to the fact button
+        document.getElementById('factButton').addEventListener('click', getFactButton);
+
+        function getSteveFact() {
+            // Get only Steve Jobs related facts
+            const steveFactsOnly = appleFacts.filter(fact => 
+                fact.toLowerCase().includes('steve jobs') || 
+                fact.toLowerCase().includes('jobs')
+            );
+            const fact = steveFactsOnly[Math.floor(Math.random() * steveFactsOnly.length)];
+            // Clear previous messages
+            clearChatHistory();
+            appendMessage(fact, 'bot');
+        }
+
+        function getResponse(message) {
+            if (isInitialSetup) {
+                if (!userName) {
+                    userName = message;
+                    const ageQuestion = `Nice to meet you, ${userName}! How old are you?`;
+                    appendMessage(ageQuestion, 'bot');
+                    return;
+                } else if (!userAge) {
+                    userAge = message;
+                    isInitialSetup = false;
+                    const welcomeMessage = `Great! ${userName}, I'm Siri, your personal Apple expert. I know a lot about Apple and Steve Jobs. Ask me anything!`;
+                    appendMessage(welcomeMessage, 'bot');
+                    return;
+                }
+            }
+
+            if (message.toLowerCase().includes('fact')) {
+                getFact();
+            } else if (message.toLowerCase().includes('steve') || message.toLowerCase().includes('jobs')) {
+                getSteveFact();
+            } else if (message.toLowerCase().includes('hi') || message.toLowerCase().includes('hello')) {
+                appendMessage(`Hi ${userName}! How can I help you today?`, 'bot');
+            } else if (message.toLowerCase().includes('age')) {
+                appendMessage(`You told me you are ${userAge} years old!`, 'bot');
+            } else if (message.toLowerCase().includes('name')) {
+                appendMessage(`Your name is ${userName}! Nice to chat with you!`, 'bot');
+            } else if (message.toLowerCase().includes('who are you')) {
+                appendMessage(`I'm Siri, ${userName}'s personal Apple expert! I'm here to share interesting facts about Apple and Steve Jobs with you.`, 'bot');
+            } else {
+                getFact();
+            }
+        }
+
+        // Initial greeting
+        setTimeout(() => {
+            startWaveform();
+            const greeting = "Hi! Before we start, what's your name?";
+            appendMessage(greeting, 'bot');
+        }, 500);
+    </script>
+</body>
+</html>
